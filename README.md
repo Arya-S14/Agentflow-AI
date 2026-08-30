@@ -139,6 +139,57 @@ Agentflow_AI is built for zero friction during local evaluation:
 
 ---
 
+## 🧪 Step-by-Step Guide: Testing Real Integrations
+
+You can test real third-party actions (**Gmail**, **Slack**, **Discord**, and **Google Sheets**) in two ways: via **Direct Token Entry** (instant setup) or **OAuth 2.0 Authorization**.
+
+### Method 1: Instant Testing via Direct Token Entry (Recommended for Quick Testing)
+
+1. **Navigate to Integrations Page**:
+   - Open your deployed app (or `http://localhost:3000`) and log in.
+   - Go to the **Third-Party Integrations** section (`/integrations`).
+
+2. **Connect a Connected Account**:
+   - Click **Enter Token** on any provider card (e.g., Slack, Discord, Gmail, or Google Sheets).
+   - Paste your actual Bot/API Token or OAuth Access Token:
+     - **Slack**: Paste your Slack Bot User OAuth Token (`xoxb-...`).
+     - **Discord**: Paste your Discord Bot Token.
+     - **Google Sheets / Gmail**: Paste your Google Access Token.
+   - Click **Save Encrypted Token**. The badge will change to `CONNECTED`.
+
+3. **Build & Execute a Workflow**:
+   - Navigate to **Workflows** -> **Builder** (`/workflows/builder`).
+   - Create or open a workflow containing an integration action node (e.g., *Slack Notification*, *Gmail Dispatcher*, *Google Sheets Append*, or *Discord Alert*).
+   - Configure the node parameters (e.g., target email, channel ID `#general`, or spreadsheet ID).
+   - Click **Execute Workflow**.
+
+4. **Verify Real Results**:
+   - Open the live **Execution Details** page (`/executions/[id]`).
+   - Watch the **Execution Agent** execute the node live over Socket.IO.
+   - Check your actual Slack channel, Discord server, Gmail inbox, or Google Sheet to see the real message or row appended!
+
+---
+
+### Method 2: Testing via Full OAuth 2.0 Authorization
+
+1. **Configure Backend Environment Variables (`server/.env`)**:
+   - Set up your OAuth Client ID and Client Secret in `server/.env` or Vercel/Render settings:
+     ```env
+     GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
+     GOOGLE_CLIENT_SECRET=your-google-client-secret
+     SLACK_CLIENT_ID=your-slack-client-id
+     SLACK_CLIENT_SECRET=your-slack-client-secret
+     DISCORD_CLIENT_ID=your-discord-client-id
+     DISCORD_CLIENT_SECRET=your-discord-client-secret
+     ```
+2. **Authorize via OAuth**:
+   - Go to `/integrations` and click **Authorize OAuth** on the provider card.
+   - Log in and grant requested permissions on Google, Slack, or Discord's authorization screen.
+   - Upon redirect, credentials are encrypted with AES-256 and stored safely.
+3. **Execute Workflows**: Trigger your workflow to send real emails, post messages, or edit sheets automatically!
+
+---
+
 ## 🔒 Security Features
 - Password hashing with **Bcrypt** (cost factor 12).
 - AES-256-CBC encryption at rest for third-party OAuth access & refresh tokens.
