@@ -1,10 +1,18 @@
 import axios from 'axios';
 
-let rawApiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+let rawApiUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api').trim();
 
-// Auto-sanitize URL: ensure it ends with /api if omitted
-if (rawApiUrl && !rawApiUrl.endsWith('/api') && !rawApiUrl.endsWith('/api/')) {
-  rawApiUrl = `${rawApiUrl.replace(/\/$/, '')}/api`;
+// Strip trailing slashes
+rawApiUrl = rawApiUrl.replace(/\/+$/, '');
+
+// If user accidentally included /auth or /auth/ at the end, strip it
+if (rawApiUrl.endsWith('/auth')) {
+  rawApiUrl = rawApiUrl.slice(0, -5);
+}
+
+// Ensure base URL ends with /api
+if (!rawApiUrl.endsWith('/api')) {
+  rawApiUrl = `${rawApiUrl}/api`;
 }
 
 const API_BASE = rawApiUrl;
