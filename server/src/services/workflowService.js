@@ -124,7 +124,11 @@ const generateWorkflowFromPrompt = async (userId, prompt) => {
 const getWorkflowById = async (userId, workflowId) => {
   let wf = null;
   try {
-    wf = await Workflow.findOne({ _id: workflowId, owner: userId });
+    const dbPromise = Workflow.findOne({ _id: workflowId, owner: userId }).lean();
+    wf = await Promise.race([
+      dbPromise,
+      new Promise((_, reject) => setTimeout(() => reject(new Error('DB_TIMEOUT')), 1500))
+    ]);
   } catch (err) {
     wf = inMemoryWorkflows.get(workflowId);
   }
@@ -186,7 +190,11 @@ const getWorkflowById = async (userId, workflowId) => {
 
 const updateWorkflow = async (userId, workflowId, updates) => {
   try {
-    const existing = await Workflow.findOne({ _id: workflowId, owner: userId });
+    const dbPromise = Workflow.findOne({ _id: workflowId, owner: userId });
+    const existing = await Promise.race([
+      dbPromise,
+      new Promise((_, reject) => setTimeout(() => reject(new Error('DB_TIMEOUT')), 1500))
+    ]);
     if (existing) {
       Object.assign(existing, updates);
       existing.version = (existing.version || 1) + 1;

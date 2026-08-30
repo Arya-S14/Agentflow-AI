@@ -61,8 +61,9 @@ export default function WorkflowEditor() {
     if (!id || executing) return;
     setExecuting(true);
     try {
-      // Auto-save current canvas state before execution
-      await api.put(`/workflows/${id}`, { nodes, edges }).catch(() => {});
+      // Non-blocking auto-save of current canvas graph state
+      api.put(`/workflows/${id}`, { nodes, edges }).catch(() => {});
+
       const res = await api.post(`/workflows/${id}/execute`);
       if (res.data?.executionId) {
         router.push(`/executions/${res.data.executionId}`);
@@ -71,11 +72,17 @@ export default function WorkflowEditor() {
       }
     } catch (e) {
       if (e.code === 'ECONNABORTED' || e.message?.includes('timeout')) {
-        alert('Render free-tier server was in cold sleep and has now warmed up! Please click "Run Workflow" again.');
-      } else {
-        const errDetail = e.response?.data?.error || e.message || 'Unknown execution error';
-        alert(`Workflow Execution Error: ${errDetail}`);
+        alert('Render free-tier server is in cold sleep. Retrying automatically...');
+        try {
+          const retryRes = await api.post(`/workflows/${id}/execute`);
+          if (retryRes.data?.executionId) {
+            router.push(`/executions/${retryRes.data.executionId}`);
+            return;
+          }
+        } catch (err2) {}
       }
+      const errDetail = e.response?.data?.error || e.message || 'Unknown execution error';
+      alert(`Workflow Execution Note: ${errDetail}`);
     } finally {
       setExecuting(false);
     }
