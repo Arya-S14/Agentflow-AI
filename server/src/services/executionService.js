@@ -126,8 +126,11 @@ const triggerExecution = async (userId, workflowId, inputs = {}) => {
 
   let execution = null;
   try {
-    execution = new Execution(executionData);
-    await execution.save();
+    const newExec = new Execution(executionData);
+    execution = await Promise.race([
+      newExec.save(),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('DB_TIMEOUT')), 1500))
+    ]);
   } catch (err) {
     execution = {
       _id: `exec_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
@@ -137,8 +140,10 @@ const triggerExecution = async (userId, workflowId, inputs = {}) => {
     inMemoryExecutions.set(execution._id, execution);
   }
 
-  // Queue background execution
-  await executionQueue.addExecutionJob('run-orchestrator', { executionId: execution._id, userId });
+  // Queue background execution safely
+  try {
+    await executionQueue.addExecutionJob('run-orchestrator', { executionId: execution._id, userId });
+  } catch (e) {}
 
   // Async non-blocking trigger of Orchestrator
   setImmediate(async () => {

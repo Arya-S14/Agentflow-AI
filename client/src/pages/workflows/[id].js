@@ -55,8 +55,11 @@ export default function WorkflowEditor() {
     }
   };
 
+  const [executing, setExecuting] = useState(false);
+
   const handleExecute = async () => {
-    if (!id) return;
+    if (!id || executing) return;
+    setExecuting(true);
     try {
       // Auto-save current canvas state before execution
       await api.put(`/workflows/${id}`, { nodes, edges }).catch(() => {});
@@ -67,8 +70,14 @@ export default function WorkflowEditor() {
         alert('Execution triggered successfully!');
       }
     } catch (e) {
-      const errDetail = e.response?.data?.error || e.message || 'Unknown execution error';
-      alert(`Workflow Execution Error: ${errDetail}`);
+      if (e.code === 'ECONNABORTED' || e.message?.includes('timeout')) {
+        alert('Render free-tier server was in cold sleep and has now warmed up! Please click "Run Workflow" again.');
+      } else {
+        const errDetail = e.response?.data?.error || e.message || 'Unknown execution error';
+        alert(`Workflow Execution Error: ${errDetail}`);
+      }
+    } finally {
+      setExecuting(false);
     }
   };
 
@@ -120,10 +129,11 @@ export default function WorkflowEditor() {
 
             <button
               onClick={handleExecute}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-md shadow-emerald-600/30"
+              disabled={executing}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-bold transition-all shadow-md shadow-emerald-600/30"
             >
               <Play className="w-4 h-4 fill-white" />
-              Run Workflow
+              {executing ? 'Triggering Engine...' : 'Run Workflow'}
             </button>
           </div>
         </header>
