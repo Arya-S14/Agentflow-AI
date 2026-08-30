@@ -60,32 +60,33 @@ export default function WorkflowEditor() {
   const handleExecute = async () => {
     if (!id || executing) return;
     setExecuting(true);
-    try {
-      // Non-blocking auto-save of current canvas graph state
-      api.put(`/workflows/${id}`, { nodes, edges }).catch(() => {});
 
-      const res = await api.post(`/workflows/${id}/execute`);
-      if (res.data?.executionId) {
-        router.push(`/executions/${res.data.executionId}`);
-      } else {
-        alert('Execution triggered successfully!');
+    // Non-blocking canvas graph auto-save
+    api.put(`/workflows/${id}`, { nodes, edges }).catch(() => {});
+
+    let attempts = 0;
+    const maxAttempts = 3;
+
+    while (attempts < maxAttempts) {
+      try {
+        attempts++;
+        const res = await api.post(`/workflows/${id}/execute`);
+        if (res.data?.executionId) {
+          router.push(`/executions/${res.data.executionId}`);
+          return;
+        }
+      } catch (e) {
+        if (attempts < maxAttempts && (e.code === 'ECONNABORTED' || e.message?.includes('timeout') || !e.response)) {
+          // Wait 2s and retry if container is warming up
+          await new Promise((r) => setTimeout(r, 2000));
+        } else {
+          const errDetail = e.response?.data?.error || e.message || 'Workflow execution trigger failed';
+          alert(`Workflow Execution Trigger Note: ${errDetail}`);
+          break;
+        }
       }
-    } catch (e) {
-      if (e.code === 'ECONNABORTED' || e.message?.includes('timeout')) {
-        alert('Render free-tier server is in cold sleep. Retrying automatically...');
-        try {
-          const retryRes = await api.post(`/workflows/${id}/execute`);
-          if (retryRes.data?.executionId) {
-            router.push(`/executions/${retryRes.data.executionId}`);
-            return;
-          }
-        } catch (err2) {}
-      }
-      const errDetail = e.response?.data?.error || e.message || 'Unknown execution error';
-      alert(`Workflow Execution Note: ${errDetail}`);
-    } finally {
-      setExecuting(false);
     }
+    setExecuting(false);
   };
 
   return (

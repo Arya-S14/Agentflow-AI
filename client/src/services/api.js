@@ -19,7 +19,7 @@ const API_BASE = rawApiUrl;
 
 const api = axios.create({
   baseURL: API_BASE,
-  timeout: 60000, // 60s timeout to account for Render free-tier cold starts
+  timeout: 90000, // 90s timeout for Render free-tier cold boots
   headers: {
     'Content-Type': 'application/json',
   },
