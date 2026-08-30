@@ -62,10 +62,8 @@ export default function WorkflowEditor() {
     setExecuting(true);
 
     try {
-      // Non-blocking auto-save of current canvas graph
-      api.put(`/workflows/${id}`, { nodes, edges }).catch(() => {});
-
-      const res = await api.post(`/workflows/${id}/execute`);
+      // Pass nodes & edges directly in single POST request for instant trigger
+      const res = await api.post(`/workflows/${id}/execute`, { nodes, edges });
       const execId = res.data?.executionId || res.data?.execution?._id;
 
       if (execId) {

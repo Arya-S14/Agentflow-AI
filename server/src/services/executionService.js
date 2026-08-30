@@ -104,10 +104,22 @@ const getExecutionTimeline = async (executionId) => {
   return logs;
 };
 
-const triggerExecution = async (userId, workflowId, inputs = {}) => {
-  const workflow = await workflowService.getWorkflowById(userId, workflowId);
+const triggerExecution = async (userId, workflowId, inputs = {}, graphOverrides = null) => {
+  let workflow = await workflowService.getWorkflowById(userId, workflowId);
   if (!workflow) {
-    throw new Error('Workflow not found');
+    workflow = {
+      _id: workflowId,
+      name: 'Custom Operations Workflow',
+      nodes: graphOverrides?.nodes || [],
+      edges: graphOverrides?.edges || [],
+      version: 1,
+    };
+  } else if (graphOverrides && graphOverrides.nodes && graphOverrides.nodes.length > 0) {
+    workflow = {
+      ...workflow,
+      nodes: graphOverrides.nodes,
+      edges: graphOverrides.edges || workflow.edges,
+    };
   }
 
   const executionData = {

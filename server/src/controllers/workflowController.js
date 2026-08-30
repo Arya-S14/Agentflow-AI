@@ -71,7 +71,13 @@ const duplicateWorkflow = async (req, res) => {
 const executeWorkflow = async (req, res) => {
   try {
     const executionService = require('../services/executionService');
-    const execution = await executionService.triggerExecution(req.user.id, req.params.id, req.body.inputs || {});
+    const { inputs, nodes, edges } = req.body || {};
+    const execution = await executionService.triggerExecution(
+      req.user.id,
+      req.params.id,
+      inputs || {},
+      { nodes, edges }
+    );
     return res.status(202).json({
       message: 'Execution triggered successfully',
       executionId: execution._id || execution.id,
