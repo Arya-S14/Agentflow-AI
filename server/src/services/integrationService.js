@@ -121,6 +121,33 @@ const getUserCredentials = async (userId, provider) => {
   return decryptData(doc.encryptedTokens);
 };
 
+const getValidCredentials = async (userId, provider) => {
+  const credentials = await getUserCredentials(userId, provider);
+  if (!credentials) return null;
+
+  // Transparent token refresh for expired credentials
+  const isExpiring = credentials.expiresAt && Date.now() > (credentials.expiresAt - 60000);
+  if (isExpiring && credentials.refreshToken) {
+    const providerInstance = getProviderInstance(provider);
+    if (providerInstance && typeof providerInstance.refreshToken === 'function') {
+      try {
+        const refreshed = await providerInstance.refreshToken(credentials.refreshToken);
+        const updatedTokens = {
+          ...credentials,
+          accessToken: refreshed.accessToken || credentials.accessToken,
+          expiresAt: refreshed.expiresAt || (Date.now() + (3600 * 1000)),
+        };
+        await saveIntegrationCredentials(userId, provider, updatedTokens, credentials.scope || []);
+        return updatedTokens;
+      } catch (err) {
+        console.error(`[Token Refresh Failed] ${provider}:`, err.message);
+      }
+    }
+  }
+
+  return credentials;
+};
+
 const getIntegrationStatus = async (userId) => {
   const integrations = await getIntegrationsForUser(userId);
   const statusSummary = {};
@@ -143,5 +170,6 @@ module.exports = {
   getIntegrationsForUser,
   saveIntegrationCredentials,
   getUserCredentials,
+  getValidCredentials,
   getIntegrationStatus,
 };

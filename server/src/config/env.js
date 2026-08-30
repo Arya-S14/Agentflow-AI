@@ -12,4 +12,11 @@ module.exports = {
   REDIS_PORT: parseInt(process.env.REDIS_PORT || '6379', 10),
   OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY || '',
   GEMINI_API_KEY: process.env.GEMINI_API_KEY || '',
+  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || process.env.GMAIL_CLIENT_ID || '',
+  GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET || process.env.GMAIL_CLIENT_SECRET || '',
+  SLACK_CLIENT_ID: process.env.SLACK_CLIENT_ID || '',
+  SLACK_CLIENT_SECRET: process.env.SLACK_CLIENT_SECRET || '',
+  DISCORD_CLIENT_ID: process.env.DISCORD_CLIENT_ID || '',
+  DISCORD_CLIENT_SECRET: process.env.DISCORD_CLIENT_SECRET || '',
+  DISCORD_BOT_TOKEN: process.env.DISCORD_BOT_TOKEN || '',
 };

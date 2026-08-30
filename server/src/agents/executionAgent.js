@@ -51,7 +51,7 @@ class ExecutionAgent {
     // Third-party Integration Node execution
     const integrationInstance = integrationService.getProviderInstance(provider);
     if (integrationInstance) {
-      const credentials = await integrationService.getUserCredentials(userId, provider);
+      const credentials = await integrationService.getValidCredentials(userId, provider);
       // Execute through integration instance
       const result = await integrationInstance.executeAction(actionType, { ...config, ...nodeInput }, credentials);
       return {
