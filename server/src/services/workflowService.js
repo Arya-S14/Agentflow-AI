@@ -194,11 +194,15 @@ const updateWorkflow = async (userId, workflowId, updates) => {
     }
   } catch (err) {}
 
-  const mem = inMemoryWorkflows.get(workflowId);
+  let mem = inMemoryWorkflows.get(workflowId);
+  if (!mem) {
+    mem = await getWorkflowById(userId, workflowId);
+  }
   if (mem) {
     Object.assign(mem, updates);
     mem.version = (mem.version || 1) + 1;
     mem.updatedAt = new Date();
+    inMemoryWorkflows.set(workflowId, mem);
     return mem;
   }
 

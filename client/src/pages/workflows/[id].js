@@ -58,10 +58,17 @@ export default function WorkflowEditor() {
   const handleExecute = async () => {
     if (!id) return;
     try {
+      // Auto-save current canvas state before execution
+      await api.put(`/workflows/${id}`, { nodes, edges }).catch(() => {});
       const res = await api.post(`/workflows/${id}/execute`);
-      router.push(`/executions/${res.data.executionId}`);
+      if (res.data?.executionId) {
+        router.push(`/executions/${res.data.executionId}`);
+      } else {
+        alert('Execution triggered successfully!');
+      }
     } catch (e) {
-      alert('Failed to trigger workflow execution');
+      const errDetail = e.response?.data?.error || e.message || 'Unknown execution error';
+      alert(`Workflow Execution Error: ${errDetail}`);
     }
   };
 
