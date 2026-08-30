@@ -25,7 +25,15 @@ initSocket(server);
 
 // Security and middleware
 app.use(helmet({ contentSecurityPolicy: false }));
-app.use(cors({ origin: env.CLIENT_URL || '*', credentials: true }));
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow server-to-server or tools with no origin header
+    if (!origin) return callback(null, true);
+    // Allow any origin in production/development for API access
+    return callback(null, true);
+  },
+  credentials: true
+}));
 app.use(compression());
 app.use(morgan('dev'));
 app.use(express.json({ limit: '10mb' }));

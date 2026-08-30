@@ -1,9 +1,17 @@
 import axios from 'axios';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+let rawApiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+
+// Auto-sanitize URL: ensure it ends with /api if omitted
+if (rawApiUrl && !rawApiUrl.endsWith('/api') && !rawApiUrl.endsWith('/api/')) {
+  rawApiUrl = `${rawApiUrl.replace(/\/$/, '')}/api`;
+}
+
+const API_BASE = rawApiUrl;
 
 const api = axios.create({
   baseURL: API_BASE,
+  timeout: 30000, // 30s timeout to account for Render free-tier cold starts
   headers: {
     'Content-Type': 'application/json',
   },
