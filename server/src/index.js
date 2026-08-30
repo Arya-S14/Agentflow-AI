@@ -39,6 +39,15 @@ const authLimiter = rateLimit({
 });
 app.use('/api/auth', authLimiter);
 
+// Root Route
+app.get('/', (req, res) => {
+  return res.status(200).json({
+    message: '🚀 Agentflow_AI Backend API is running',
+    health: '/api/health',
+    version: '1.0.0'
+  });
+});
+
 // Health Check
 app.get('/api/health', (req, res) => {
   return res.status(200).json({
