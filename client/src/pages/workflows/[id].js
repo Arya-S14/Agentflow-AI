@@ -61,32 +61,25 @@ export default function WorkflowEditor() {
     if (!id || executing) return;
     setExecuting(true);
 
-    // Non-blocking canvas graph auto-save
-    api.put(`/workflows/${id}`, { nodes, edges }).catch(() => {});
+    try {
+      // Non-blocking auto-save of current canvas graph
+      api.put(`/workflows/${id}`, { nodes, edges }).catch(() => {});
 
-    let attempts = 0;
-    const maxAttempts = 3;
+      const res = await api.post(`/workflows/${id}/execute`);
+      const execId = res.data?.executionId || res.data?.execution?._id;
 
-    while (attempts < maxAttempts) {
-      try {
-        attempts++;
-        const res = await api.post(`/workflows/${id}/execute`);
-        if (res.data?.executionId) {
-          router.push(`/executions/${res.data.executionId}`);
-          return;
-        }
-      } catch (e) {
-        if (attempts < maxAttempts && (e.code === 'ECONNABORTED' || e.message?.includes('timeout') || !e.response)) {
-          // Wait 2s and retry if container is warming up
-          await new Promise((r) => setTimeout(r, 2000));
-        } else {
-          const errDetail = e.response?.data?.error || e.message || 'Workflow execution trigger failed';
-          alert(`Workflow Execution Trigger Note: ${errDetail}`);
-          break;
-        }
+      if (execId) {
+        router.push(`/executions/${execId}`);
+      } else {
+        alert('Workflow execution triggered successfully!');
       }
+    } catch (err) {
+      console.error('[Workflow Execution Error]', err);
+      const errMsg = err.response?.data?.error || err.message || 'Failed to trigger execution';
+      alert(`Execution Error: ${errMsg}`);
+    } finally {
+      setExecuting(false);
     }
-    setExecuting(false);
   };
 
   return (
